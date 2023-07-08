@@ -24,13 +24,19 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dates := lib.GetDates(time.April, 2023)
+	dates := lib.GetDates(time.June, 2023)
 	userMap := make(map[openai.User]float32)
+	reqCount := 0
 	for _, date := range dates {
 		userUsages := []openai.UserUsage{}
 		for _, v := range usersResponse.Members.Data {
 			usage, err := openai.GetDayUsage(v.User, date)
+			reqCount += 1
+			if reqCount%5 == 0 {
+				time.Sleep(time.Minute)
+			}
 			if err != nil {
+
 				log.Fatal(err)
 			}
 			userUsage, err := openai.CalculateUserUsage(v.User, *usage)
@@ -72,7 +78,7 @@ func main() {
 	// Final total bill calculations
 	fmt.Println("Totals")
 	fmt.Println("----")
-	usdToInr := 81.73
+	usdToInr := 82.62
 	fmt.Printf("USD to INR Rate: %.2f\n", usdToInr)
 	fmt.Println("----")
 	var totalOrgUsdPrice float32
@@ -86,10 +92,12 @@ func main() {
 	// 18 % GST
 	tax := totalOrgUsdPrice * 18 / 100
 	taxPerHead := tax / float32(nUsersWithBill)
+	var totalOrgUsdPriceWithTax float32
 	for user, totalPriceUsdWithoutTax := range userMap {
 		totalPriceUsd := totalPriceUsdWithoutTax + taxPerHead
+		totalOrgUsdPriceWithTax += totalPriceUsd
 		totalPriceInr := totalPriceUsd * float32(usdToInr)
 		fmt.Printf("%s: %.2f USD ->> %.2f INR\n", user.Name, totalPriceUsd, totalPriceInr)
 	}
-
+	fmt.Printf("Total org bill USD ->> %.2f\n", totalOrgUsdPriceWithTax)
 }

@@ -32,6 +32,8 @@ func makeRequest(url string, method string) (*http.Response, error) {
 
 	// Check for errors
 	if resp.StatusCode != http.StatusOK {
+		bodyText, _ := io.ReadAll(resp.Body)
+		fmt.Println(string(bodyText))
 		return nil, fmt.Errorf("request failed with status code %d", resp.StatusCode)
 	}
 
