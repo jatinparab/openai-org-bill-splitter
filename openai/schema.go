@@ -45,7 +45,8 @@ type UserUsage struct {
 	Date                  string
 	NGpt4PromptTokens     int
 	NGpt4CompletionTokens int
-	NGpt3Tokens           int
+	NGpt3PromptTokens     int
+	NGpt3CompletionTokens int
 	NDavinciTokens        int
 	NAdaEmbeddingTokens   int
 	PriceUsd              float32

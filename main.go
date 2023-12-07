@@ -24,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dates := lib.GetDates(time.June, 2023)
+	dates := lib.GetDates(time.September, 2023)
 	userMap := make(map[openai.User]float32)
 	reqCount := 0
 	for _, date := range dates {
@@ -52,8 +52,11 @@ func main() {
 			fmt.Println(date, "------")
 			for _, userUsage := range userUsages {
 				fmt.Printf("Name: %s\n", userUsage.User.Name)
-				if userUsage.NGpt3Tokens > 0 {
-					fmt.Printf("GPT 3 Tokens: %v\n", userUsage.NGpt3Tokens)
+				if userUsage.NGpt3CompletionTokens > 0 {
+					fmt.Printf("GPT 3 Completion Tokens: %v\n", userUsage.NGpt3CompletionTokens)
+				}
+				if userUsage.NGpt3PromptTokens > 0 {
+					fmt.Printf("GPT 3 Prompt Tokens: %v\n", userUsage.NGpt3PromptTokens)
 				}
 				if userUsage.NGpt4CompletionTokens > 0 {
 					fmt.Printf("GPT 4 Completion Tokens: %v\n", userUsage.NGpt4CompletionTokens)
@@ -89,12 +92,17 @@ func main() {
 			nUsersWithBill += 1
 		}
 	}
+	fmt.Printf("Total org bill USD Without Tax ->> %.2f\n", totalOrgUsdPrice)
+
 	// 18 % GST
 	tax := totalOrgUsdPrice * 18 / 100
-	taxPerHead := tax / float32(nUsersWithBill)
+	fmt.Printf("Tax ->> %.2f\n", tax)
 	var totalOrgUsdPriceWithTax float32
 	for user, totalPriceUsdWithoutTax := range userMap {
-		totalPriceUsd := totalPriceUsdWithoutTax + taxPerHead
+		if !(totalPriceUsdWithoutTax > 0) {
+			continue
+		}
+		totalPriceUsd := totalPriceUsdWithoutTax + (tax * float32(totalPriceUsdWithoutTax/totalOrgUsdPrice))
 		totalOrgUsdPriceWithTax += totalPriceUsd
 		totalPriceInr := totalPriceUsd * float32(usdToInr)
 		fmt.Printf("%s: %.2f USD ->> %.2f INR\n", user.Name, totalPriceUsd, totalPriceInr)
